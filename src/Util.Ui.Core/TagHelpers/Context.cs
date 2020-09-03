@@ -43,15 +43,30 @@ namespace Util.Ui.TagHelpers {
         /// <summary>
         /// 内容
         /// </summary>
-        public TagHelperContent Content { get; }
+        public TagHelperContent Content { get; set; }
 
         /// <summary>
         /// 从TagHelperContext Items里获取值
         /// </summary>
         /// <typeparam name="T">返回类型</typeparam>
         /// <param name="key">键</param>
-        public T GetValueFromItems<T>( object key ) {
+        public T GetValueFromItems<T>( object key = null ) {
             return TagHelperContext.GetValueFromItems<T>( key );
+        }
+
+        /// <summary>
+        /// 设置TagHelperContext Items值
+        /// </summary>
+        /// <param name="value">值</param>
+        public void SetValueToItems<T>( T value ) {
+            TagHelperContext.SetValueToItems( value );
+        }
+
+        /// <summary>
+        /// 移除TagHelperContext Items值
+        /// </summary>
+        public void RemoveFromItems<T>() {
+            TagHelperContext.RemoveFromItems<T>();
         }
     }
 }

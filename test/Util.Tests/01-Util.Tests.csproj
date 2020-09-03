@@ -22,7 +22,7 @@
   <ItemGroup>
     <PackageReference Include="Castle.Core" Version="4.3.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
-    <PackageReference Include="NSubstitute" Version="3.1.0" />
+    <PackageReference Include="NSubstitute" Version="4.0.0" />
     <PackageReference Include="System.Reflection.Primitives" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
@@ -32,9 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Util.Applications\07-Util.Applications.csproj" />
-    <ProjectReference Include="..\..\src\Util.Datas\06-Util.Datas.csproj" />
-    <ProjectReference Include="..\..\src\Util.Events\04-Util.Events.csproj" />
+    <ProjectReference Include="..\..\src\Util.Applications\08-Util.Applications.csproj" />
+    <ProjectReference Include="..\..\src\Util.Caches\04-Util.Caches.csproj" />
+    <ProjectReference Include="..\..\src\Util.Datas\07-Util.Datas.csproj" />
+    <ProjectReference Include="..\..\src\Util.Events\05-Util.Events.csproj" />
     <ProjectReference Include="..\..\src\Util.Logs\03-Util.Logs.csproj" />
     <ProjectReference Include="..\..\src\Util.Security\02-Util.Security.csproj" />
     <ProjectReference Include="..\..\src\Util\01-Util.csproj" />

@@ -1,5 +1,5 @@
-﻿using System.Text;
-using Util.Exceptions;
+﻿using System;
+using System.Text;
 
 namespace Util.Logs.Abstractions {
     /// <summary>
@@ -14,6 +14,10 @@ namespace Util.Logs.Abstractions {
         /// 日志级别
         /// </summary>
         string Level { get; set; }
+        /// <summary>
+        /// 日志标识
+        /// </summary>
+        string LogId { get; set; }
         /// <summary>
         /// 跟踪号
         /// </summary>
@@ -57,6 +61,6 @@ namespace Util.Logs.Abstractions {
         /// <summary>
         /// 异常消息
         /// </summary>
-        Warning Exception { get; set; }
+        Exception Exception { get; set; }
     }
 }

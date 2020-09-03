@@ -113,6 +113,17 @@ namespace Util.Tests.Helpers {
 
             expression3 = t => !t.Test2.BoolValue;
             Assert.Equal( "BoolValue", Lambda.GetLastName( expression3 ) );
+
+            expression = t => t.StringValue == "A";
+            Assert.Empty( Lambda.GetLastName( expression, true ) );
+
+            var value = "a";
+            expression = t => t.StringValue == value;
+            Assert.Empty( Lambda.GetLastName( expression, true ) );
+
+            var sample = new Sample();
+            expression = t => t.StringValue == sample.StringValue;
+            Assert.Empty( Lambda.GetLastName( expression, true ) );
         }
 
         /// <summary>
@@ -175,13 +186,13 @@ namespace Util.Tests.Helpers {
             var test = new Sample() { StringValue = "a", Test2 = new Sample2() { StringValue = "b", Test3 = new Sample3() { StringValue = "c" } } };
 
             Expression<Func<string>> expression = () => test.StringValue;
-            Assert.Equal( "StringValue", Lambda.GetLastName( expression ) );
+            Assert.Empty( Lambda.GetLastName( expression ) );
 
             Expression<Func<string>> expression2 = () => test.Test2.StringValue;
-            Assert.Equal( "StringValue", Lambda.GetLastName( expression2 ) );
+            Assert.Empty( Lambda.GetLastName( expression2 ) );
 
             Expression<Func<string>> expression3 = () => test.Test2.Test3.StringValue;
-            Assert.Equal( "StringValue", Lambda.GetLastName( expression3 ) );
+            Assert.Empty( Lambda.GetLastName( expression3 ) );
         }
 
         /// <summary>
@@ -314,6 +325,9 @@ namespace Util.Tests.Helpers {
             var value = Guid.NewGuid();
             Expression<Func<Sample, bool>> expression4 = t => t.GuidValue == value;
             Assert.Equal( value, Lambda.GetValue( expression4 ) );
+
+            Expression<Func<Sample, bool>> expression5 = t => 1 == t.Test2.IntValue;
+            Assert.Equal( 1, Lambda.GetValue( expression5 ) );
         }
 
         /// <summary>
@@ -391,6 +405,10 @@ namespace Util.Tests.Helpers {
 
             expression = t => t.NullableDecimalValue == 1.5M;
             Assert.Equal( 1.5M, Lambda.GetValue( expression ) );
+
+            var sample = new Sample();
+            expression = t => t.BoolValue == sample.NullableBoolValue;
+            Assert.Null( Lambda.GetValue( expression ) );
         }
 
         /// <summary>
@@ -750,9 +768,18 @@ namespace Util.Tests.Helpers {
         /// </summary>
         [Fact]
         public void TestConstant() {
-            Expression<Func<Sample, int?>> property = t => t.NullableIntValue;
-            ConstantExpression constantExpression = Lambda.Constant( property, 1 );
+            var constantExpression = Lambda.Constant( 1 );
             Assert.Equal( typeof( int ), constantExpression.Type );
+        }
+
+        /// <summary>
+        /// 测试获取常量表达式
+        /// </summary>
+        [Fact]
+        public void TestConstant_2() {
+            Expression<Func<Sample, int?>> property = t => t.NullableIntValue;
+            var constantExpression = Lambda.Constant( 1 , property );
+            Assert.Equal( typeof( int? ), constantExpression.Type );
         }
 
         #endregion

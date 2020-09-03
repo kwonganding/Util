@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Util.Biz.Payments.Wechatpay.Configs;
+using Util.Biz.Payments.Wechatpay.Parameters;
 using Util.Biz.Payments.Wechatpay.Signatures;
 using Util.Helpers;
 using Util.Logs;
@@ -15,10 +16,6 @@ namespace Util.Biz.Payments.Wechatpay.Results {
     /// </summary>
     public class WechatpayResult {
         /// <summary>
-        /// 配置提供器
-        /// </summary>
-        private readonly IWechatpayConfigProvider _configProvider;
-        /// <summary>
         /// 响应结果
         /// </summary>
         private readonly ParameterBuilder _builder;
@@ -26,23 +23,40 @@ namespace Util.Biz.Payments.Wechatpay.Results {
         /// 签名
         /// </summary>
         private string _sign;
-        /// <summary>
-        /// 微信支付原始响应
-        /// </summary>
-        public string Raw { get; }
 
         /// <summary>
         /// 初始化微信支付结果
         /// </summary>
         /// <param name="configProvider">配置提供器</param>
         /// <param name="response">xml响应消息</param>
-        public WechatpayResult( IWechatpayConfigProvider configProvider, string response ) {
+        /// <param name="config">配置</param>
+        /// <param name="parameterBuilder">参数生成器</param>
+        public WechatpayResult( IWechatpayConfigProvider configProvider, string response, WechatpayConfig config = null, WechatpayParameterBuilder parameterBuilder = null ) {
             configProvider.CheckNull( nameof( configProvider ) );
-            _configProvider = configProvider;
+            ConfigProvider = configProvider;
             Raw = response;
+            Config = config;
+            Builder = parameterBuilder;
             _builder = new ParameterBuilder();
             Resolve( response );
         }
+
+        /// <summary>
+        /// 微信支付原始响应
+        /// </summary>
+        public string Raw { get; }
+        /// <summary>
+        /// 配置提供器
+        /// </summary>
+        public IWechatpayConfigProvider ConfigProvider { get; }
+        /// <summary>
+        /// 配置
+        /// </summary>
+        public WechatpayConfig Config { get; }
+        /// <summary>
+        /// 参数生成器
+        /// </summary>
+        public WechatpayParameterBuilder Builder { get; }
 
         /// <summary>
         /// 解析响应
@@ -64,12 +78,12 @@ namespace Util.Biz.Payments.Wechatpay.Results {
         /// <summary>
         /// 写日志
         /// </summary>
-        protected void WriteLog() {
+        protected virtual void WriteLog() {
             var log = GetLog();
             if( log.IsTraceEnabled == false )
                 return;
             log.Class( GetType().FullName )
-                .Caption( "微信支付返回" )
+                .Caption( "微信支付返回结果" )
                 .Content( "参数:" )
                 .Content( GetParams() )
                 .Content()
@@ -81,7 +95,7 @@ namespace Util.Biz.Payments.Wechatpay.Results {
         /// <summary>
         /// 获取日志操作
         /// </summary>
-        private ILog GetLog() {
+        protected ILog GetLog() {
             try {
                 return Log.GetLog( WechatpayConst.TraceLogName );
             }
@@ -148,6 +162,13 @@ namespace Util.Biz.Payments.Wechatpay.Results {
         }
 
         /// <summary>
+        /// 获取微信退款单号
+        /// </summary>
+        public string GetRefundId() {
+            return GetParam( "refund_id" );
+        }
+
+        /// <summary>
         /// 获取交易类型
         /// </summary>
         public string GetTradeType() {
@@ -158,14 +179,23 @@ namespace Util.Biz.Payments.Wechatpay.Results {
         /// 获取错误码
         /// </summary>
         public string GetErrorCode() {
-            return GetParam( WechatpayConst.ErrorCode );
+            var result = GetParam( "err_code" );
+            if( string.IsNullOrWhiteSpace( result ) == false )
+                return result;
+            return GetParam( "error_code" );
         }
 
         /// <summary>
         /// 获取错误码和描述
         /// </summary>
         public string GetErrorCodeDescription() {
-            return GetParam( WechatpayConst.ErrorCodeDescription );
+            var result = GetParam( WechatpayConst.ErrorCodeDescription );
+            if ( string.IsNullOrWhiteSpace( result ) == false )
+                return result;
+            result = GetParam( "return_msg" );
+            if( string.IsNullOrWhiteSpace( result ) == false )
+                return result;
+            return GetErrorCode();
         }
 
         /// <summary>
@@ -200,7 +230,7 @@ namespace Util.Biz.Payments.Wechatpay.Results {
         /// 验证签名
         /// </summary>
         public async Task<bool> VerifySign() {
-            var config = await _configProvider.GetConfigAsync( _builder );
+            var config = Config ?? await ConfigProvider.GetConfigAsync( _builder );
             return SignManagerFactory.Create( config, _builder ).Verify( GetSign() );
         }
     }

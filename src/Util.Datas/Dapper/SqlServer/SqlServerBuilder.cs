@@ -1,7 +1,7 @@
-﻿using System.Text;
-using Util.Datas.Matedatas;
-using Util.Datas.Sql.Queries.Builders.Abstractions;
-using Util.Datas.Sql.Queries.Builders.Core;
+﻿using Util.Datas.Sql;
+using Util.Datas.Sql.Builders;
+using Util.Datas.Sql.Builders.Core;
+using Util.Datas.Sql.Matedatas;
 
 namespace Util.Datas.Dapper.SqlServer {
     /// <summary>
@@ -12,8 +12,19 @@ namespace Util.Datas.Dapper.SqlServer {
         /// 初始化Sql生成器
         /// </summary>
         /// <param name="matedata">实体元数据解析器</param>
+        /// <param name="tableDatabase">表数据库</param>
         /// <param name="parameterManager">参数管理器</param>
-        public SqlServerBuilder( IEntityMatedata matedata = null, IParameterManager parameterManager = null ) : base( matedata, parameterManager ) {
+        public SqlServerBuilder( IEntityMatedata matedata = null, ITableDatabase tableDatabase = null, IParameterManager parameterManager = null )
+            : base( matedata, tableDatabase, parameterManager ) {
+        }
+
+        /// <summary>
+        /// 复制Sql生成器
+        /// </summary>
+        public override ISqlBuilder Clone() {
+            var sqlBuilder = new SqlServerBuilder();
+            sqlBuilder.Clone( this );
+            return sqlBuilder;
         }
 
         /// <summary>
@@ -27,20 +38,14 @@ namespace Util.Datas.Dapper.SqlServer {
         /// 创建Sql生成器
         /// </summary>
         public override ISqlBuilder New() {
-            return new SqlServerBuilder( EntityMatedata,ParameterManager );
+            return new SqlServerBuilder( EntityMatedata, TableDatabase, ParameterManager );
         }
 
         /// <summary>
         /// 创建分页Sql
         /// </summary>
-        protected override void CreatePagerSql( StringBuilder result ) {
-            AppendSelect( result );
-            AppendFrom( result );
-            AppendSql( result, GetJoin() );
-            AppendSql( result, GetWhere() );
-            AppendSql( result, GetGroupBy() );
-            AppendSql( result, GetOrderBy() );
-            result.Append( $"Offset { GetPager().GetSkipCount() } Rows Fetch Next { GetPager().PageSize } Rows Only" );
+        protected override string CreateLimitSql() {
+            return $"Offset {GetOffsetParam()} Rows Fetch Next {GetLimitParam()} Rows Only";
         }
     }
 }

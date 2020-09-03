@@ -69,6 +69,14 @@ namespace Util.Webs.Clients {
         /// 令牌
         /// </summary>
         private string _token;
+        /// <summary>
+        /// 证书路径
+        /// </summary>
+        private string _certificatePath;
+        /// <summary>
+        /// 证书密码
+        /// </summary>
+        private string _certificatePassword;
 
         #endregion
 
@@ -277,6 +285,17 @@ namespace Util.Webs.Clients {
             return This();
         }
 
+        /// <summary>
+        /// 设置证书
+        /// </summary>
+        /// <param name="path">证书路径</param>
+        /// <param name="password">证书密码</param>
+        public TRequest Certificate( string path, string password ) {
+            _certificatePath = path;
+            _certificatePassword = password;
+            return This();
+        }
+
         #endregion
 
         #region ResultAsync(获取结果)
@@ -319,10 +338,22 @@ namespace Util.Webs.Clients {
         /// 创建Http客户端
         /// </summary>
         protected virtual HttpClient CreateHttpClient() {
-            return new HttpClient( new HttpClientHandler {
+            return new HttpClient( CreateHttpClientHandler() ) { Timeout = _timeout };
+        }
+
+        /// <summary>
+        /// 创建Http客户端处理器
+        /// </summary>
+        protected HttpClientHandler CreateHttpClientHandler() {
+            var handler = new HttpClientHandler {
                 CookieContainer = _cookieContainer,
                 ServerCertificateCustomValidationCallback = _serverCertificateCustomValidationCallback
-            } ) { Timeout = _timeout };
+            };
+            if ( string.IsNullOrWhiteSpace( _certificatePath ) )
+                return handler;
+            var certificate = new X509Certificate2( _certificatePath, _certificatePassword, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet );
+            handler.ClientCertificates.Add( certificate );
+            return handler;
         }
 
         /// <summary>
@@ -330,7 +361,19 @@ namespace Util.Webs.Clients {
         /// </summary>
         /// <param name="client">Http客户端</param>
         protected virtual void InitHttpClient( HttpClient client ) {
+            InitToken();
+            if ( string.IsNullOrWhiteSpace( _token ) )
+                return;
             client.SetBearerToken( _token );
+        }
+
+        /// <summary>
+        /// 初始化访问令牌
+        /// </summary>
+        protected virtual void InitToken() {
+            if( string.IsNullOrWhiteSpace( _token ) == false )
+                return;
+            _token = Web.AccessToken;
         }
 
         /// <summary>
@@ -414,6 +457,24 @@ namespace Util.Webs.Clients {
         protected virtual void FailHandler( string result, HttpStatusCode statusCode, string contentType ) {
             _failAction?.Invoke( result );
             _failStatusCodeAction?.Invoke( result, statusCode );
+        }
+
+        #endregion
+
+        #region GetStreamAsync(获取流)
+
+        /// <summary>
+        /// 获取流
+        /// </summary>
+        public async Task<byte[]> GetStreamAsync() {
+            using( var client = new HttpClient() ) {
+                using( var result = await client.GetAsync( _url ) ) {
+                    if( result.IsSuccessStatusCode ) {
+                        return await result.Content.ReadAsByteArrayAsync();
+                    }
+                }
+            }
+            return null;
         }
 
         #endregion

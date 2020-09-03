@@ -1,14 +1,14 @@
 ﻿using Autofac;
 using Util.Datas.Dapper;
 using Util.Datas.Dapper.SqlServer;
-using Util.Datas.Matedatas;
 using Util.Datas.Sql;
+using Util.Datas.Sql.Matedatas;
 using Util.Datas.Sql.Queries;
-using Util.Datas.Sql.Queries.Builders.Abstractions;
 using Util.Datas.Tests.Commons.Domains.Repositories;
 using Util.Datas.Tests.Ef.SqlServer.Repositories;
 using Util.Datas.Tests.Ef.SqlServer.Stores;
 using Util.Datas.Tests.Ef.SqlServer.UnitOfWorks;
+using Util.Datas.Transactions;
 using Util.Datas.UnitOfWorks;
 using Util.Dependency;
 using Util.Sessions;
@@ -32,6 +32,7 @@ namespace Util.Datas.Tests.Commons.Datas.SqlServer.Configs {
         private void LoadInfrastructure( ContainerBuilder builder ) {
             builder.AddSingleton<ISession>( new Session( AppConfig.UserId ) );
             builder.AddScoped<IUnitOfWorkManager, UnitOfWorkManager>();
+            builder.AddScoped<ITransactionActionManager, TransactionActionManager>();
             builder.RegisterType<SqlServerUnitOfWork>().AsSelf().InstancePerLifetimeScope().PropertiesAutowired();
             builder.Register( t => t.Resolve<SqlServerUnitOfWork>() ).As<ISqlServerUnitOfWork>().InstancePerLifetimeScope().PropertiesAutowired();
             builder.Register( t => t.Resolve<SqlServerUnitOfWork>() ).As<IDatabase>().InstancePerLifetimeScope().PropertiesAutowired();

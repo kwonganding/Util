@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Util.Datas.Ef.Core;
 using Util.Datas.Ef.Internal;
-using Util.Datas.UnitOfWorks;
 
 namespace Util.Datas.Ef.PgSql {
     /// <summary>
@@ -15,16 +15,16 @@ namespace Util.Datas.Ef.PgSql {
         /// 初始化PgSql工作单元
         /// </summary>
         /// <param name="options">配置</param>
-        /// <param name="manager">工作单元服务</param>
-        protected UnitOfWork( DbContextOptions options, IUnitOfWorkManager manager )
-            : base( options, manager ) {
+        /// <param name="serviceProvider">服务提供器</param>
+        protected UnitOfWork( DbContextOptions options, IServiceProvider serviceProvider = null )
+            : base( options, serviceProvider ) {
         }
 
         /// <summary>
-        /// 获取映射类型列表
+        /// 获取映射实例列表
         /// </summary>
         /// <param name="assembly">程序集</param>
-        protected override IEnumerable<Util.Datas.Ef.Core.IMap> GetMapTypes( Assembly assembly ) {
+        protected override IEnumerable<Util.Datas.Ef.Core.IMap> GetMapInstances( Assembly assembly ) {
             return Util.Helpers.Reflection.GetInstancesByInterface<IMap>( assembly );
         }
 

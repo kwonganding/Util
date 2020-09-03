@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Claims;
 using System.Text;
@@ -17,7 +18,7 @@ namespace Util.Helpers {
     /// <summary>
     /// Web操作
     /// </summary>
-    public static class Web {
+    public static partial class Web {
 
         #region 静态构造方法
 
@@ -91,6 +92,25 @@ namespace Util.Helpers {
                 if( User.Identity is ClaimsIdentity identity )
                     return identity;
                 return UnauthenticatedIdentity.Instance;
+            }
+        }
+
+        #endregion
+
+        #region AccessToken(获取访问令牌)
+
+        /// <summary>
+        /// 获取访问令牌
+        /// </summary>
+        public static string AccessToken {
+            get {
+                var authorization = Request?.Headers["Authorization"].SafeString();
+                if ( string.IsNullOrWhiteSpace( authorization ) )
+                    return null;
+                var list = authorization.Split( ' ' );
+                if ( list.Length == 2 )
+                    return list[1];
+                return null;
             }
         }
 
@@ -181,8 +201,8 @@ namespace Util.Helpers {
                     return _ip;
                 var list = new[] { "127.0.0.1", "::1" };
                 var result = HttpContext?.Connection?.RemoteIpAddress.SafeString();
-                if( string.IsNullOrWhiteSpace( result ) || list.Contains( result ) )
-                    result = GetLanIp();
+                if (string.IsNullOrWhiteSpace(result) || list.Contains(result))
+                    result = Common.IsWindows ? GetLanIp() : GetLanIp(NetworkInterfaceType.Ethernet);
                 return result;
             }
         }
@@ -195,6 +215,31 @@ namespace Util.Helpers {
                 if( hostAddress.AddressFamily == AddressFamily.InterNetwork )
                     return hostAddress.ToString();
             }
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 获取局域网IP
+        /// </summary>
+        /// <param name="type">网络接口类型</param>
+        private static string GetLanIp(NetworkInterfaceType type) {
+            try {
+                foreach (var item in NetworkInterface.GetAllNetworkInterfaces()) {
+                    if(item.NetworkInterfaceType!=type || item.OperationalStatus!=OperationalStatus.Up)
+                        continue;
+                    var ipProperties = item.GetIPProperties();
+                    if(ipProperties.GatewayAddresses.FirstOrDefault() == null)
+                        continue;
+                    foreach (var ip in ipProperties.UnicastAddresses) {
+                        if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                            return ip.Address.ToString();
+                    }
+                }
+            }
+            catch {
+                return string.Empty;
+            }
+
             return string.Empty;
         }
 
@@ -284,6 +329,33 @@ namespace Util.Helpers {
 
         #endregion
 
+        #region GetParam(获取请求参数)
+
+        /// <summary>
+        /// 获取请求参数，搜索路径：查询参数->表单参数->请求头
+        /// </summary>
+        /// <param name="name">参数名</param>
+        public static string GetParam( string name ) {
+            if ( string.IsNullOrWhiteSpace( name ) )
+                return string.Empty;
+            if ( Request == null )
+                return string.Empty;
+            var result = string.Empty;
+            if( Request.Query != null )
+                result = Request.Query[name];
+            if ( string.IsNullOrWhiteSpace( result ) == false )
+                return result;
+            if( Request.Form != null )
+                result = Request.Form[name];
+            if( string.IsNullOrWhiteSpace( result ) == false )
+                return result;
+            if( Request.Headers != null )
+                result = Request.Headers[name];
+            return result;
+        }
+
+        #endregion
+
         #region UrlEncode(Url编码)
 
         /// <summary>
@@ -355,6 +427,75 @@ namespace Util.Helpers {
         /// <param name="encoding">字符编码</param>
         public static string UrlDecode( string url, Encoding encoding ) {
             return HttpUtility.UrlDecode( url, encoding );
+        }
+
+        #endregion
+
+        #region DownloadAsync(下载)
+
+        /// <summary>
+        /// 下载文件
+        /// </summary>
+        /// <param name="filePath">文件绝对路径</param>
+        /// <param name="fileName">文件名,包含扩展名</param>
+        public static async Task DownloadFileAsync( string filePath, string fileName ) {
+            await DownloadFileAsync( filePath, fileName, Encoding.UTF8 );
+        }
+
+        /// <summary>
+        /// 下载文件
+        /// </summary>
+        /// <param name="filePath">文件绝对路径</param>
+        /// <param name="fileName">文件名,包含扩展名</param>
+        /// <param name="encoding">字符编码</param>
+        public static async Task DownloadFileAsync( string filePath, string fileName, Encoding encoding ) {
+            var bytes = File.Read( filePath );
+            await DownloadAsync( bytes, fileName, encoding );
+        }
+
+        /// <summary>
+        /// 下载
+        /// </summary>
+        /// <param name="stream">流</param>
+        /// <param name="fileName">文件名,包含扩展名</param>
+        public static async Task DownloadAsync( Stream stream, string fileName ) {
+            await DownloadAsync( stream, fileName, Encoding.UTF8 );
+        }
+
+        /// <summary>
+        /// 下载
+        /// </summary>
+        /// <param name="stream">流</param>
+        /// <param name="fileName">文件名,包含扩展名</param>
+        /// <param name="encoding">字符编码</param>
+        public static async Task DownloadAsync( Stream stream, string fileName, Encoding encoding ) {
+            await DownloadAsync( File.ToBytes( stream ), fileName, encoding );
+        }
+
+        /// <summary>
+        /// 下载
+        /// </summary>
+        /// <param name="bytes">字节流</param>
+        /// <param name="fileName">文件名,包含扩展名</param>
+        public static async Task DownloadAsync( byte[] bytes, string fileName ) {
+            await DownloadAsync( bytes, fileName, Encoding.UTF8 );
+        }
+
+        /// <summary>
+        /// 下载
+        /// </summary>
+        /// <param name="bytes">字节流</param>
+        /// <param name="fileName">文件名,包含扩展名</param>
+        /// <param name="encoding">字符编码</param>
+        public static async Task DownloadAsync( byte[] bytes, string fileName, Encoding encoding ) {
+            if( bytes == null || bytes.Length == 0 )
+                return;
+            fileName = fileName.Replace( " ", "" );
+            fileName = UrlEncode( fileName, encoding );
+            Response.ContentType = "application/octet-stream";
+            Response.Headers.Add( "Content-Disposition", $"attachment; filename={fileName}" );
+            Response.Headers.Add( "Content-Length", bytes.Length.ToString() );
+            await Response.Body.WriteAsync( bytes, 0, bytes.Length );
         }
 
         #endregion

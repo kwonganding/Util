@@ -18,11 +18,12 @@
 import { TreeViewModel } from '../../../../util';
 
 /**
- * <%=Entity.Description%>视图模型
+ * <%=Entity.Description%>参数
  */
 export class <%=SafeClassName%>ViewModel extends TreeViewModel {
     <% foreach(Property p in Entity.Properties) { %>
     <% if( p.IsPrimaryKey.SafeValue() ) continue; %>
+    <% if( p.ColumnName == "IsDeleted" && p.DataType == DbType.Boolean ) continue;%>
     <% if( Entity.IgnoreTreeEntityProperty(p) ) continue;%>
     /**
      * <%=p.Description %>

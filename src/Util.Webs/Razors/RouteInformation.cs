@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Util.Webs.Razors
-{
+﻿namespace Util.Webs.Razors {
     /// <summary>
     /// 路由信息
     /// </summary>
-    public class RouteInformation
-    {
+    public class RouteInformation {
         /// <summary>
         /// 区域名称
         /// </summary>
@@ -33,7 +27,7 @@ namespace Util.Webs.Razors
         /// 调用方法
         /// </summary>
         public string Invocation { get; set; }
-        
+
         /// <summary>
         /// 文件路径
         /// </summary>
@@ -53,5 +47,15 @@ namespace Util.Webs.Razors
         /// 是否部分视图
         /// </summary>
         public bool IsPartialView { get; set; } = false;
+
+        /// <summary>
+        /// 是否页面路由
+        /// </summary>
+        public bool IsPageRoute { get; set; } = false;
+
+        /// <summary>
+        /// 是否忽略生成
+        /// </summary>
+        public bool Ignore { get; set; } = false;
     }
 }

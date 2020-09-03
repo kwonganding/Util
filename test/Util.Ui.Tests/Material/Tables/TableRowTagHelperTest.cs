@@ -103,5 +103,19 @@ namespace Util.Ui.Tests.Material.Tables {
             result.Append( "</mat-row>" );
             Assert.Equal( result.ToString(), GetResult( attributes ) );
         }
+
+        /// <summary>
+        /// 测试单击事件
+        /// </summary>
+        [Fact]
+        public void TestOnClick() {
+            var attributes = new TagHelperAttributeList { { UiConst.Columns, "'a','b'" }, { UiConst.OnClick, "c" } };
+            var result = new String();
+            result.Append( "<mat-header-row *matHeaderRowDef=\"['a','b'];sticky:true\">" );
+            result.Append( "</mat-header-row>" );
+            result.Append( "<mat-row (click)=\"c;\" *matRowDef=\"let row;columns:['a','b']\" class=\"mat-row-hover\">" );
+            result.Append( "</mat-row>" );
+            Assert.Equal( result.ToString(), GetResult( attributes ) );
+        }
     }
 }

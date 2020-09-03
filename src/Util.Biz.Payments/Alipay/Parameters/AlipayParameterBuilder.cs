@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Util.Biz.Payments.Alipay.Configs;
 using Util.Biz.Payments.Core;
 using Util.Helpers;
@@ -26,7 +25,7 @@ namespace Util.Biz.Payments.Alipay.Parameters {
         /// </summary>
         public AlipayContentBuilder Content { get; }
 
-        /// <summary>
+        /// <summary>z
         /// 初始化支付宝参数生成器
         /// </summary>
         /// <param name="config">配置</param>
@@ -40,11 +39,17 @@ namespace Util.Biz.Payments.Alipay.Parameters {
         /// <summary>
         /// 初始化
         /// </summary>
+        public void Init() {
+            AppId( Config.AppId ).Format( "json" ).Charset( Config.Charset ).SignType( "RSA2" ).Timestamp().Version( "1.0" );
+        }
+
+        /// <summary>
+        /// 初始化支付参数
+        /// </summary>
         public void Init( PayParam param ) {
             param.Init();
             Content.Init( param );
-            Format( "json" ).Charset( Config.Charset ).SignType( "RSA2" ).Timestamp().Version( "1.0" ).AppId( Config.AppId )
-                .ReturnUrl( param.ReturnUrl ).NotifyUrl( param.NotifyUrl );
+            ReturnUrl( param.ReturnUrl ).NotifyUrl( param.NotifyUrl );
         }
 
         /// <summary>
@@ -122,7 +127,7 @@ namespace Util.Biz.Payments.Alipay.Parameters {
         /// 获取回调通知地址
         /// </summary>
         private string GetNotifyUrl( string notifyUrl ) {
-            if( notifyUrl.IsEmpty() )
+            if ( notifyUrl.IsEmpty() )
                 return Config.NotifyUrl;
             return notifyUrl;
         }
@@ -158,7 +163,7 @@ namespace Util.Biz.Payments.Alipay.Parameters {
         /// </summary>
         private UrlParameterBuilder GetSignBuilder( bool isConvertToSingleQuotes = false ) {
             var builder = new UrlParameterBuilder( _builder );
-            if( Content.IsEmpty == false )
+            if ( Content.IsEmpty == false )
                 builder.Add( AlipayConst.BizContent, Content.ToJson( isConvertToSingleQuotes ) );
             builder.Add( AlipayConst.Sign, GetSign( builder ) );
             return builder;

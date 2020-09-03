@@ -31,6 +31,46 @@ namespace Util.Tests.Maps {
         }
 
         /// <summary>
+        /// 测试映射
+        /// </summary>
+        [Fact]
+        public void TestMapTo_3() {
+            Sample sample = new Sample { StringValue = "a" };
+            Sample2 sample2 = sample.MapTo<Sample2>();
+            Assert.Equal( "a", sample2.StringValue );
+
+            sample2 = new Sample2 { StringValue = "b" };
+            sample = sample2.MapTo<Sample>();
+            Assert.Equal( "b", sample.StringValue );
+
+            sample = new Sample { StringValue = "c" };
+            sample2 = sample.MapTo<Sample2>();
+            Assert.Equal( "c", sample2.StringValue );
+        }
+
+        /// <summary>
+        /// 测试映射 - 映射相同属性名的不同对象
+        /// </summary>
+        [Fact]
+        public void TestMapTo_4() {
+            Sample sample = new Sample { Test3 = new Sample3Copy { StringValue = "a" } };
+            Sample2 sample2 = sample.MapTo<Sample2>();
+            Assert.Equal( "a", sample2.Test3.StringValue );
+        }
+
+        /// <summary>
+        /// 测试映射 - 映射相同属性名的不同对象集合
+        /// </summary>
+        [Fact]
+        public void TestMapTo_5() {
+            Sample sample = new Sample { TestList = new List<Sample3Copy> { new Sample3Copy{ StringValue = "a" }, new Sample3Copy { StringValue = "b" } } };
+            Sample2 sample2 = sample.MapTo<Sample2>();
+            Assert.Equal( 2, sample2.TestList.Count );
+            Assert.Equal( "a", sample2.TestList[0].StringValue );
+            Assert.Equal( "b", sample2.TestList[1].StringValue );
+        }
+
+        /// <summary>
         /// 测试映射集合
         /// </summary>
         [Fact]
@@ -79,7 +119,7 @@ namespace Util.Tests.Maps {
         /// </summary>
         [Fact]
         public void TestMapToList_Array() {
-            Sample[] sampleList = new Sample[] { new Sample { StringValue = "a" }, new Sample { StringValue = "b" } };
+            Sample[] sampleList = { new Sample { StringValue = "a" }, new Sample { StringValue = "b" } };
             List<Sample2> sample2List = sampleList.MapToList<Sample2>();
             Assert.Equal( 2, sample2List.Count );
             Assert.Equal( "a", sample2List[0].StringValue );
@@ -90,23 +130,11 @@ namespace Util.Tests.Maps {
         /// </summary>
         [Fact]
         public void TestMapTo_MultipleThread() {
-            Thread.WaitAll( () => {
+            Thread.ParallelExecute( () => {
                 var sample = new Sample { StringValue = "a" };
                 var sample2 = sample.MapTo<Sample2>();
                 Assert.Equal( "a", sample2.StringValue );
-            },() => {
-                var sample = new DtoSample { Name = "a" };
-                var sample2 = sample.MapTo<EntitySample>();
-                Assert.Equal( "a", sample2.Name );
-            }, () => {
-                var sample = new Sample2 { StringValue = "a" };
-                var sample2 = sample.MapTo<Sample>();
-                Assert.Equal( "a", sample2.StringValue );
-            }, () => {
-                var sample = new EntitySample{ Name = "a" };
-                var sample2 = sample.MapTo<DtoSample>();
-                Assert.Equal( "a", sample2.Name );
-            } );
+            }, 20 );
         }
 
         /// <summary>
@@ -114,7 +142,7 @@ namespace Util.Tests.Maps {
         /// </summary>
         [Fact]
         public void TestMapTo_Ignore() {
-            DtoSample sample2 = new DtoSample { Name = "a",IgnoreValue = "b"};
+            DtoSample sample2 = new DtoSample { Name = "a", IgnoreValue = "b" };
             EntitySample sample = sample2.MapTo<EntitySample>();
             Assert.Equal( "a", sample.Name );
             Assert.Null( sample.IgnoreValue );
@@ -138,6 +166,11 @@ namespace Util.Tests.Maps {
             proxy2.Name = "b";
             sample = proxy2.MapTo<EntitySample>();
             Assert.Equal( "b", sample.Name );
+
+            var sample2 = new DtoSample { Name = "c" };
+            var proxy3 = proxyGenerator.CreateClassProxy<EntitySample>();
+            sample2.MapTo( proxy3 );
+            Assert.Equal( "c", proxy3.Name );
         }
     }
 }

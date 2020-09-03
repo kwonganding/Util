@@ -51,6 +51,10 @@ namespace Util.Biz.Payments.Factories {
                     return new WechatpayAppPayService( _wechatpayConfigProvider );
                 case PayWay.WechatpayMiniProgramPay:
                     return new WechatpayMiniProgramPayService( _wechatpayConfigProvider );
+                case PayWay.WechatpayJsApiPay:
+                    return new WechatpayJsApiPayService( _wechatpayConfigProvider );
+                case PayWay.WechatpayNativePay:
+                    return new WechatpayNativePayService( _wechatpayConfigProvider );
             }
             throw new NotImplementedException( way.Description() );
         }
@@ -67,6 +71,20 @@ namespace Util.Biz.Payments.Factories {
         /// </summary>
         public IAlipayReturnService CreateAlipayReturnService() {
             return new AlipayReturnService( _alipayConfigProvider );
+        }
+
+        /// <summary>
+        /// 创建支付宝交易撤消服务
+        /// </summary>
+        public IAlipayCancelService CreateAlipayCancelService() {
+            return new AlipayCancelService( _alipayConfigProvider );
+        }
+
+        /// <summary>
+        /// 创建支付宝下载对账单服务
+        /// </summary>
+        public IAlipayDownloadBillService CreateAlipayDownloadBillService() {
+            return new AlipayDownloadBillService( _alipayConfigProvider );
         }
 
         /// <summary>
@@ -112,6 +130,27 @@ namespace Util.Biz.Payments.Factories {
         }
 
         /// <summary>
+        /// 创建微信退款服务
+        /// </summary>
+        public IWechatpayRefundService CreateWechatpayRefundService() {
+            return new WechatpayRefundService( _wechatpayConfigProvider );
+        }
+
+        /// <summary>
+        /// 创建微信关闭订单服务
+        /// </summary>
+        public IWechatpayCloseOrderService CreateWechatpayCloseOrderService() {
+            return new WechatpayCloseOrderService( _wechatpayConfigProvider );
+        }
+
+        /// <summary>
+        /// 创建微信下载对账单服务
+        /// </summary>
+        public IWechatpayDownloadBillService CreateWechatpayDownloadBillService() {
+            return new WechatpayDownloadBillService( _wechatpayConfigProvider );
+        }
+
+        /// <summary>
         /// 创建微信App支付服务
         /// </summary>
         public IWechatpayAppPayService CreateWechatpayAppPayService() {
@@ -123,6 +162,20 @@ namespace Util.Biz.Payments.Factories {
         /// </summary>
         public IWechatpayMiniProgramPayService CreateWechatpayMiniProgramPayService() {
             return new WechatpayMiniProgramPayService( _wechatpayConfigProvider );
+        }
+
+        /// <summary>
+        /// 创建微信JsApi支付服务
+        /// </summary>
+        public IWechatpayJsApiPayService CreateWechatpayJsApiPayService() {
+            return new WechatpayJsApiPayService( _wechatpayConfigProvider );
+        }
+
+        /// <summary>
+        /// 创建微信扫码支付服务
+        /// </summary>
+        public IWechatpayNativePayService CreateWechatpayNativePayService() {
+            return new WechatpayNativePayService( _wechatpayConfigProvider );
         }
     }
 }

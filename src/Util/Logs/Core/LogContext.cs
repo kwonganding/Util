@@ -17,25 +17,32 @@ namespace Util.Logs.Core {
         /// 序号
         /// </summary>
         private int _orderId;
+        /// <summary>
+        /// 上下文
+        /// </summary>
+        private IContext _context;
 
         /// <summary>
         /// 初始化日志上下文
         /// </summary>
-        /// <param name="context">上下文</param>
-        public LogContext( IContext context ) {
-            Context = context;
+        public LogContext() {
             _orderId = 0;
         }
 
         /// <summary>
         /// 上下文
         /// </summary>
-        public IContext Context { get; set; }
+        public virtual IContext Context => _context ?? ( _context = ContextFactory.Create() );
+
+        /// <summary>
+        /// 日志标识
+        /// </summary>
+        public string LogId => $"{GetInfo().TraceId}-{++_orderId}";
 
         /// <summary>
         /// 跟踪号
         /// </summary>
-        public string TraceId => $"{GetInfo().TraceId}-{++_orderId}";
+        public string TraceId => $"{GetInfo().TraceId}";
 
         /// <summary>
         /// 计时器

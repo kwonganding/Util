@@ -21,13 +21,13 @@ using <%= Entity.GetNamespace(Namespace,"Domain","Models") %>;
 
 namespace <%= string.Format("{0}.Service.Dtos.{1}.Extensions",Namespace,Entity.TableSchema) %> {
     /// <summary>
-    /// <%= Description %>数据传输对象扩展
+    /// <%= Description %>参数扩展
     /// </summary>
     public static class <%= SafeClassName %>DtoExtension {
         /// <summary>
         /// 转换为<%= Description %>实体
         /// </summary>
-        /// <param name="dto"><%= Description %>数据传输对象</param>
+        /// <param name="dto"><%= Description %>参数</param>
         public static <%= SafeClassName %> ToEntity( this <%= SafeClassName %>Dto dto ) {
             if ( dto == null )
                 return new <%= SafeClassName %>();
@@ -37,15 +37,16 @@ namespace <%= string.Format("{0}.Service.Dtos.{1}.Extensions",Namespace,Entity.T
         /// <summary>
         /// 转换为<%= Description %>实体
         /// </summary>
-        /// <param name="dto"><%= Description %>数据传输对象</param>
+        /// <param name="dto"><%= Description %>参数</param>
         public static <%= SafeClassName %> ToEntity2( this <%= SafeClassName %>Dto dto ) {
             if( dto == null )
                 return new <%= SafeClassName %>();
             return new <%= SafeClassName %>( dto.Id<%=Entity.GetToEntityConvert() %> ) {
                 <% foreach(Property p in Entity.Properties) { %>
+                <% if( p.ColumnName == "IsDeleted" && p.DataType == DbType.Boolean ) continue;%>
                 <% if( p.IsPrimaryKey.SafeValue() ) continue; %>
                 <% if( p.DataType == DbType.Boolean ){ %>
-                    <%= p.PropertyName.ToSafeName() %> = dto.<%= p.PropertyName.ToSafeName() %>.SafeValue(),
+                <%= p.PropertyName.ToSafeName() %> = dto.<%= p.PropertyName.ToSafeName() %>.SafeValue(),
                 <%continue;} %>
                 <%= p.PropertyName.ToSafeName() %> = dto.<%= p.PropertyName.ToSafeName() %>,
                 <%}%>
@@ -55,12 +56,13 @@ namespace <%= string.Format("{0}.Service.Dtos.{1}.Extensions",Namespace,Entity.T
         /// <summary>
         /// 转换为<%= Description %>实体
         /// </summary>
-        /// <param name="dto"><%= Description %>数据传输对象</param>
+        /// <param name="dto"><%= Description %>参数</param>
         public static <%= SafeClassName %> ToEntity3( this <%= SafeClassName %>Dto dto ) {
             if( dto == null )
                 return new <%= SafeClassName %>();
             return <%= SafeClassName %>Factory.Create(
                 <% foreach(Property p in Entity.Properties) { %>
+                <% if( p.ColumnName == "IsDeleted" && p.DataType == DbType.Boolean ) continue;%>
                 <% if( p.IsPrimaryKey.SafeValue() ) {%>
                 <%= p.PropertyName.ToSafeName().ToCamelCase() %> : dto.Id<%=Entity.GetToEntityConvert() %>,
                 <%continue;}%>
@@ -70,7 +72,7 @@ namespace <%= string.Format("{0}.Service.Dtos.{1}.Extensions",Namespace,Entity.T
         }
         
         /// <summary>
-        /// 转换为<%= Description %>数据传输对象
+        /// 转换为<%= Description %>参数
         /// </summary>
         /// <param name="entity"><%= Description %>实体</param>
         public static <%= SafeClassName %>Dto ToDto(this <%= SafeClassName %> entity) {
@@ -80,7 +82,7 @@ namespace <%= string.Format("{0}.Service.Dtos.{1}.Extensions",Namespace,Entity.T
         }
 
         /// <summary>
-        /// 转换为<%= Description %>数据传输对象
+        /// 转换为<%= Description %>参数
         /// </summary>
         /// <param name="entity"><%= Description %>实体</param>
         public static <%= SafeClassName %>Dto ToDto2( this <%= SafeClassName %> entity ) {
@@ -88,6 +90,7 @@ namespace <%= string.Format("{0}.Service.Dtos.{1}.Extensions",Namespace,Entity.T
                 return new <%= SafeClassName %>Dto();
             return new <%= SafeClassName %>Dto {
                 <% foreach(Property p in Entity.Properties) { %>
+                <% if( p.ColumnName == "IsDeleted" && p.DataType == DbType.Boolean ) continue;%>
                 <% if( p.IsPrimaryKey.SafeValue() ) {%>
                 Id = entity.Id<%=Entity.GetToDtoConvert() %>,
                 <%continue;}%>

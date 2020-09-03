@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Util.Datas.Sql;
+using System.Text;
 using Util.Exceptions;
+using Util.Helpers;
 using Util.Logs.Contents;
 using Util.Logs.Properties;
 
@@ -85,7 +86,7 @@ namespace Util.Logs.Extensions {
         public static ILog Params( this ILog log, IDictionary<string, object> dictionary ) {
             if( dictionary == null || dictionary.Count == 0 )
                 return log;
-            foreach ( var item in dictionary )
+            foreach( var item in dictionary )
                 Params( log, item.Key, item.Value.SafeString() );
             return log;
         }
@@ -121,11 +122,39 @@ namespace Util.Logs.Extensions {
         /// 设置Sql参数
         /// </summary>
         /// <param name="log">日志操作</param>
-        /// <param name="dictionary">字典</param>
-        public static ILog SqlParams( this ILog log, IDictionary<string, object> dictionary ) {
-            if( dictionary == null || dictionary.Count == 0 )
+        /// <param name="list">键值对列表</param>
+        public static ILog SqlParams( this ILog log, IEnumerable<KeyValuePair<string, object>> list ) {
+            if( list == null )
                 return log;
-            return SqlParams( log, dictionary.Select( t => $"{t.Key} : {SqlHelper.GetParamLiterals( t.Value )}" ).Join() );
+            var dictionary = list.ToList();
+            if( dictionary.Count == 0 )
+                return log;
+            var result = new StringBuilder();
+            foreach( var item in dictionary )
+                result.AppendLine( $"   {item.Key} : {GetParamLiterals( item.Value )} : {item.Value?.GetType()}," );
+            return SqlParams( log, result.ToString().RemoveEnd( $",{Common.Line}" ) );
+        }
+
+        /// <summary>
+        /// 获取参数字面值
+        /// </summary>
+        /// <param name="value">参数值</param>
+        private static string GetParamLiterals( object value ) {
+            if( value == null )
+                return "''";
+            switch( value.GetType().Name.ToLower() ) {
+                case "boolean":
+                    return Helpers.Convert.ToBool( value ) ? "1" : "0";
+                case "int16":
+                case "int32":
+                case "int64":
+                case "single":
+                case "double":
+                case "decimal":
+                    return value.SafeString();
+                default:
+                    return $"'{value}'";
+            }
         }
 
         /// <summary>
@@ -134,10 +163,13 @@ namespace Util.Logs.Extensions {
         /// <param name="log">日志操作</param>
         /// <param name="exception">异常</param>
         /// <param name="errorCode">错误码</param>
-        public static ILog Exception( this ILog log, Exception exception, string errorCode = "" ) {
+        public static ILog Exception( this ILog log, Exception exception, string errorCode = null ) {
             if( exception == null )
                 return log;
-            return Exception( log, new Warning( "", errorCode, exception ) );
+            return log.Set<LogContent>( content => {
+                content.Exception = exception;
+                content.ErrorCode = errorCode;
+            } );
         }
 
         /// <summary>
@@ -148,10 +180,7 @@ namespace Util.Logs.Extensions {
         public static ILog Exception( this ILog log, Warning exception ) {
             if( exception == null )
                 return log;
-            return log.Set<LogContent>( content => {
-                content.ErrorCode = exception.Code;
-                content.Exception = exception;
-            } );
+            return Exception( log, exception, exception.Code );
         }
     }
 }

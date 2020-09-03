@@ -15,6 +15,10 @@ namespace Util.Biz.Payments.Wechatpay.Parameters {
         /// 参数生成器
         /// </summary>
         private readonly ParameterBuilder _builder;
+        /// <summary>
+        /// 签名参数名称
+        /// </summary>
+        private string _signName;
 
         /// <summary>
         /// 配置
@@ -34,12 +38,18 @@ namespace Util.Biz.Payments.Wechatpay.Parameters {
         /// <summary>
         /// 初始化
         /// </summary>
+        public void Init() {
+            AppId( Config.AppId ).MerchantId( Config.MerchantId ).SignType( Config.SignType.Description() ).Add( "nonce_str", Id.Guid() );
+        }
+
+        /// <summary>
+        /// 初始化支付参数
+        /// </summary>
         public void Init( PayParam param ) {
             param.CheckNull( nameof( param ) );
             param.Init();
-            AppId( Config.AppId ).MerchantId( Config.MerchantId ).SignType( Config.SignType.Description() )
-                .Add( "nonce_str", Id.Guid() ).SpbillCreateIp( Web.Ip ).Body( param.Subject ).OutTradeNo( param.OrderId )
-                .TotalFee( param.Money ).NotifyUrl( param.NotifyUrl ).Attach( param.Attach ).OpenId( param.OpenId );
+            SpbillCreateIp( Web.Ip ).Body( param.Subject ).OutTradeNo( param.OrderId )
+                .TotalFee( param.Money ).NotifyUrl( param.NotifyUrl ).Attach( param.Attach );
         }
 
         /// <summary>
@@ -47,7 +57,7 @@ namespace Util.Biz.Payments.Wechatpay.Parameters {
         /// </summary>
         /// <param name="name">参数名</param>
         /// <param name="value">参数值</param>
-        public WechatpayParameterBuilder Add( string name, string value ) {
+        public WechatpayParameterBuilder Add( string name, object value ) {
             _builder.Add( name, value );
             return this;
         }
@@ -197,6 +207,15 @@ namespace Util.Biz.Payments.Wechatpay.Parameters {
         }
 
         /// <summary>
+        /// 设置签名参数名称
+        /// </summary>
+        /// <param name="name">参数名称</param>
+        public WechatpayParameterBuilder SignParamName( string name ) {
+            _signName = name;
+            return this;
+        }
+
+        /// <summary>
         /// 获取Xml结果，包含签名
         /// </summary>
         public string ToXml() {
@@ -229,8 +248,17 @@ namespace Util.Biz.Payments.Wechatpay.Parameters {
         /// </summary>
         private ParameterBuilder GetSignBuilder() {
             var builder = new ParameterBuilder( _builder );
-            builder.Add( WechatpayConst.Sign, GetSign() );
+            builder.Add( GetSignName(), GetSign() );
             return builder;
+        }
+
+        /// <summary>
+        /// 获取签名参数名称
+        /// </summary>
+        private string GetSignName() {
+            if ( _signName.IsEmpty() )
+                return WechatpayConst.Sign;
+            return _signName;
         }
 
         /// <summary>

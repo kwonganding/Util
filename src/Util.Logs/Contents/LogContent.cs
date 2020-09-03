@@ -1,5 +1,5 @@
-﻿using System.Text;
-using Util.Exceptions;
+﻿using System;
+using System.Text;
 using Util.Logs.Abstractions;
 
 namespace Util.Logs.Contents {
@@ -25,6 +25,10 @@ namespace Util.Logs.Contents {
         /// 日志级别
         /// </summary>
         public string Level { get; set; }
+        /// <summary>
+        /// 日志标识
+        /// </summary>
+        public string LogId { get; set; }
         /// <summary>
         /// 跟踪号
         /// </summary>
@@ -58,7 +62,7 @@ namespace Util.Logs.Contents {
         /// </summary>
         public string Url { get; set; }
         /// <summary>
-        /// 业务编号
+        /// 业务标识
         /// </summary>
         public string BusinessId { get; set; }
         /// <summary>
@@ -86,7 +90,7 @@ namespace Util.Logs.Contents {
         /// </summary>
         public StringBuilder Params { get; set; }
         /// <summary>
-        /// 操作人编号
+        /// 操作人标识
         /// </summary>
         public string UserId { get; set; }
         /// <summary>
@@ -120,6 +124,6 @@ namespace Util.Logs.Contents {
         /// <summary>
         /// 异常
         /// </summary>
-        public Warning Exception { get; set; }
+        public Exception Exception { get; set; }
     }
 }

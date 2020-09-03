@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Logging;
 
 namespace Util.Datas.Tests.Samples {
     public interface ISample {
@@ -106,6 +107,14 @@ namespace Util.Datas.Tests.Samples {
         /// </summary>
         public DateTime? NullableDateValue { get; set; }
         /// <summary>
+        /// 不可空枚举值
+        /// </summary>
+        public LogLevel LogLevel { get; set; }
+        /// <summary>
+        /// 可空枚举值
+        /// </summary>
+        public LogLevel? NullableLogLevel { get; set; }
+        /// <summary>
         /// int值
         /// </summary>
         [Description( "IntValue" )]
@@ -167,5 +176,10 @@ namespace Util.Datas.Tests.Samples {
         public static Sample Create2() {
             return new Sample { StringValue = "B" };
         }
+
+        /// <summary>
+        /// 是否删除
+        /// </summary>
+        public bool IsDeleted { get; set; }
     }
 }

@@ -136,7 +136,7 @@ namespace Util {
         /// <param name="left">左操作数</param>
         /// <param name="value">值</param>
         public static Expression Equal( this Expression left, object value ) {
-            return left.Equal( Lambda.Constant( left, value ) );
+            return left.Equal( Lambda.Constant( value, left ) );
         }
 
         #endregion
@@ -158,7 +158,7 @@ namespace Util {
         /// <param name="left">左操作数</param>
         /// <param name="value">值</param>
         public static Expression NotEqual( this Expression left, object value ) {
-            return left.NotEqual( Lambda.Constant( left, value ) );
+            return left.NotEqual( Lambda.Constant( value, left ) );
         }
 
         #endregion
@@ -180,7 +180,7 @@ namespace Util {
         /// <param name="left">左操作数</param>
         /// <param name="value">值</param>
         public static Expression Greater( this Expression left, object value ) {
-            return left.Greater( Lambda.Constant( left, value ) );
+            return left.Greater( Lambda.Constant( value, left ) );
         }
 
         #endregion
@@ -202,7 +202,7 @@ namespace Util {
         /// <param name="left">左操作数</param>
         /// <param name="value">值</param>
         public static Expression GreaterEqual( this Expression left, object value ) {
-            return left.GreaterEqual( Lambda.Constant( left, value ) );
+            return left.GreaterEqual( Lambda.Constant( value, left ) );
         }
 
         #endregion
@@ -224,7 +224,7 @@ namespace Util {
         /// <param name="left">左操作数</param>
         /// <param name="value">值</param>
         public static Expression Less( this Expression left, object value ) {
-            return left.Less( Lambda.Constant( left, value ) );
+            return left.Less( Lambda.Constant( value, left ) );
         }
 
         #endregion
@@ -246,7 +246,7 @@ namespace Util {
         /// <param name="left">左操作数</param>
         /// <param name="value">值</param>
         public static Expression LessEqual( this Expression left, object value ) {
-            return left.LessEqual( Lambda.Constant( left, value ) );
+            return left.LessEqual( Lambda.Constant( value, left ) );
         }
 
         #endregion
@@ -322,6 +322,30 @@ namespace Util {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// 操作
+        /// </summary>
+        /// <param name="left">左操作数</param>
+        /// <param name="operator">运算符</param>
+        /// <param name="value">值</param>
+        public static Expression Operation( this Expression left, Operator @operator, Expression value ) {
+            switch( @operator ) {
+                case Operator.Equal:
+                    return left.Equal( value );
+                case Operator.NotEqual:
+                    return left.NotEqual( value );
+                case Operator.Greater:
+                    return left.Greater( value );
+                case Operator.GreaterEqual:
+                    return left.GreaterEqual( value );
+                case Operator.Less:
+                    return left.Less( value );
+                case Operator.LessEqual:
+                    return left.LessEqual( value );
+            }
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Call(调用方法表达式)
@@ -333,7 +357,12 @@ namespace Util {
         /// <param name="methodName">方法名</param>
         /// <param name="values">参数值列表</param>
         public static Expression Call( this Expression instance, string methodName, params Expression[] values ) {
-            return Expression.Call( instance, instance.Type.GetTypeInfo().GetMethod( methodName ), values );
+            if( instance == null )
+                throw new ArgumentNullException( nameof( instance ) );
+            var methodInfo = instance.Type.GetMethod( methodName );
+            if ( methodInfo == null )
+                return null;
+            return Expression.Call( instance, methodInfo, values );
         }
 
         /// <summary>
@@ -343,9 +372,14 @@ namespace Util {
         /// <param name="methodName">方法名</param>
         /// <param name="values">参数值列表</param>
         public static Expression Call( this Expression instance, string methodName, params object[] values ) {
+            if( instance == null )
+                throw new ArgumentNullException( nameof( instance ) );
+            var methodInfo = instance.Type.GetMethod( methodName );
+            if( methodInfo == null )
+                return null;
             if( values == null || values.Length == 0 )
-                return Expression.Call( instance, instance.Type.GetTypeInfo().GetMethod( methodName ) );
-            return Expression.Call( instance, instance.Type.GetTypeInfo().GetMethod( methodName ), values.Select( Expression.Constant ) );
+                return Expression.Call( instance, methodInfo );
+            return Expression.Call( instance, methodInfo, values.Select( Expression.Constant ) );
         }
 
         /// <summary>
@@ -356,9 +390,14 @@ namespace Util {
         /// <param name="paramTypes">参数类型列表</param>
         /// <param name="values">参数值列表</param>
         public static Expression Call( this Expression instance, string methodName, Type[] paramTypes, params object[] values ) {
+            if( instance == null )
+                throw new ArgumentNullException( nameof( instance ) );
+            var methodInfo = instance.Type.GetMethod( methodName, paramTypes );
+            if( methodInfo == null )
+                return null;
             if( values == null || values.Length == 0 )
-                return Expression.Call( instance, instance.Type.GetTypeInfo().GetMethod( methodName, paramTypes ) );
-            return Expression.Call( instance, instance.Type.GetTypeInfo().GetMethod( methodName, paramTypes ), values.Select( Expression.Constant ) );
+                return Expression.Call( instance, methodInfo );
+            return Expression.Call( instance, methodInfo, values.Select( Expression.Constant ) );
         }
 
         #endregion
@@ -390,9 +429,23 @@ namespace Util {
         /// <param name="body">表达式</param>
         /// <param name="parameters">参数列表</param>
         public static Expression<TDelegate> ToLambda<TDelegate>( this Expression body, params ParameterExpression[] parameters ) {
-            if ( body == null )
+            if( body == null )
                 return null;
             return Expression.Lambda<TDelegate>( body, parameters );
+        }
+
+        #endregion
+
+        #region ToPredicate(创建谓词表达式)
+
+        /// <summary>
+        /// 创建谓词表达式
+        /// </summary>
+        /// <typeparam name="T">委托类型</typeparam>
+        /// <param name="body">表达式</param>
+        /// <param name="parameters">参数列表</param>
+        public static Expression<Func<T, bool>> ToPredicate<T>( this Expression body, params ParameterExpression[] parameters ) {
+            return ToLambda<Func<T, bool>>( body, parameters );
         }
 
         #endregion

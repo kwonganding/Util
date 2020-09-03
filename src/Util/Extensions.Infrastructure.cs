@@ -2,8 +2,8 @@
 using System.Text;
 using AspectCore.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Util.Contexts;
 using Util.Dependency;
+using Util.Sessions;
 
 namespace Util {
     /// <summary>
@@ -28,7 +28,8 @@ namespace Util {
         public static IServiceProvider AddUtil( this IServiceCollection services, Action<IAspectConfiguration> aopConfigAction, params IConfig[] configs ) {
             services.AddHttpContextAccessor();
             Encoding.RegisterProvider( CodePagesEncodingProvider.Instance );
-            return Bootstrapper.Run( services, new WebContext(), configs, aopConfigAction );
+            services.AddSingleton<ISession, Session>();
+            return Bootstrapper.Run( services, configs, aopConfigAction );
         }
     }
 }
